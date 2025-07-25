@@ -40,3 +40,243 @@
 .read-the-docs {
   color: #888;
 }
+
+.chat-container {
+  max-width: 400px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  padding: 24px 18px 18px 18px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+h1 {
+  text-align: center;
+  color: #2d3748;
+  margin-bottom: 18px;
+}
+
+.chat-box {
+  min-height: 220px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: #f7fafc;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.chat-message {
+  margin-bottom: 10px;
+  display: flex;
+}
+
+.chat-message.bot {
+  justify-content: flex-start;
+}
+
+.chat-message.user {
+  justify-content: flex-end;
+}
+
+.chat-message span {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 16px;
+  font-size: 15px;
+  max-width: 80%;
+  word-break: break-word;
+}
+
+.chat-message.bot span {
+  background: #e2e8f0;
+  color: #2d3748;
+}
+
+.chat-message.user span {
+  background: #3182ce;
+  color: #fff;
+}
+
+.chat-input {
+  display: flex;
+  gap: 8px;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 15px;
+}
+
+.chat-input button {
+  background: #3182ce;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chat-input button:hover {
+  background: #2563eb;
+}
+
+.form-summary {
+  margin-top: 18px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 14px 12px;
+  border: 1px solid #cbd5e1;
+}
+
+.form-summary h2 {
+  margin-top: 0;
+  font-size: 18px;
+  color: #2d3748;
+}
+
+.form-summary ul {
+  list-style: none;
+  padding: 0;
+}
+
+.form-summary li {
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+
+.form-options {
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-option-button {
+  background: #e2e8f0;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 14px;
+  text-align: left;
+}
+
+.form-option-button:hover {
+  background: #cbd5e1;
+}
+
+.form-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.form-description {
+  color: #64748b;
+  margin-bottom: 20px;
+  font-style: italic;
+}
+
+.autofill-notice {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #92400e;
+}
+
+.municipal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-group label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 14px;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.form-field {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-field:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.autofilled-field {
+  background-color: #fef3c7 !important;
+  border-color: #f59e0b !important;
+  color: #92400e !important;
+  font-weight: 500 !important;
+}
+
+.submit-button {
+  background: #059669;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 10px;
+}
+
+.submit-button:hover {
+  background: #047857;
+}
+
+.completion-message {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.completion-message h2 {
+  color: #059669;
+  margin-bottom: 16px;
+}
+
+.restart-button {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.restart-button:hover {
+  background: #2563eb;
+}
