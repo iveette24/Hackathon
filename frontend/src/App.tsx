@@ -131,66 +131,79 @@ function App() {
   };
 
   return (
-    <div className="chat-container">
-      <h1>Asistente de Trámites - Ayuntamiento</h1>
-      
-      {phase === 'chat' && (
-        <>
-          <div className="chat-box">
-            {messages.map((msg, idx) => (
-              <div key={idx}>
-                <div className={`chat-message ${msg.sender}`}> 
-                  <span>{msg.text}</span>
-                </div>
-                {msg.forms && (
-                  <div className="form-options">
-                    {msg.forms.map(form => (
-                      <button
-                        key={form.id}
-                        className="form-option-button"
-                        onClick={() => handleFormSelection(form)}
-                      >
-                        {form.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          <form className="chat-input" onSubmit={handleSend}>
-            <input
-              type="text"
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              placeholder="Escribe tu respuesta..."
-              autoFocus
-            />
-            <button type="submit">Enviar</button>
-          </form>
-        </>
-      )}
-
-      {phase === 'form' && selectedForm && (
-        <FormRenderer
-          form={selectedForm}
-          chatAnswers={answers}
-          onSubmit={handleFormSubmit}
-        />
-      )}
-
-      {phase === 'completed' && (
-        <div className="completion-message">
-          <h2>✅ Trámite Completado</h2>
-          <p>Tu solicitud ha sido enviada correctamente.</p>
-          <button 
-            className="restart-button"
-            onClick={() => window.location.reload()}
-          >
-            Realizar otro trámite
-          </button>
+    <div className="container-fluid bg-light min-vh-100 py-4">
+      <div className="chat-container shadow-lg">
+        <div className="chat-header">
+          <h1>🏛️ Asistente de Trámites - Ayuntamiento</h1>
+          <p className="mb-0 opacity-75">Tu ayuda digital para gestiones municipales</p>
         </div>
-      )}
+        
+        {phase === 'chat' && (
+          <>
+            <div className="chat-box">
+              {messages.map((msg, idx) => (
+                <div key={idx}>
+                  <div className={`chat-message ${msg.sender}`}> 
+                    <span>{msg.text}</span>
+                  </div>
+                  {msg.forms && (
+                    <div className="form-options">
+                      {msg.forms.map(form => (
+                        <button
+                          key={form.id}
+                          className="form-option-button"
+                          onClick={() => handleFormSelection(form)}
+                        >
+                          <strong>{form.name}</strong>
+                          <small className="d-block text-muted mt-1">{form.description}</small>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <form className="chat-input d-flex gap-2" onSubmit={handleSend}>
+              <input
+                type="text"
+                className="form-control"
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                placeholder="Escribe tu respuesta..."
+                autoFocus
+              />
+              <button type="submit" className="btn btn-primary px-4">
+                <i className="bi bi-send me-1"></i>Enviar
+              </button>
+            </form>
+          </>
+        )}
+
+        {phase === 'form' && selectedForm && (
+          <FormRenderer
+            form={selectedForm}
+            chatAnswers={answers}
+            onSubmit={handleFormSubmit}
+          />
+        )}
+
+        {phase === 'completed' && (
+          <div className="completion-message">
+            <div className="mb-4">
+              <i className="bi bi-check-circle-fill text-success" style={{fontSize: '4rem'}}></i>
+            </div>
+            <h2>✅ Trámite Completado</h2>
+            <p>Tu solicitud ha sido enviada correctamente.</p>
+            <button 
+              className="btn restart-button"
+              onClick={() => window.location.reload()}
+            >
+              <i className="bi bi-arrow-clockwise me-2"></i>
+              Realizar otro trámite
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

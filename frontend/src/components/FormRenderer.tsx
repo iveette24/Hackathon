@@ -46,14 +46,14 @@ const FormRenderer: React.FC<FormRendererProps> = ({ form, chatAnswers, onSubmit
 
   const renderField = (field: FormField) => {
     const isAutoFilled = autoFilledFields.has(field.id);
-    const className = isAutoFilled ? 'form-field autofilled-field' : 'form-field';
+    const baseClassName = isAutoFilled ? 'autofilled-field' : '';
 
     switch (field.type) {
       case 'select':
         return (
           <select
             key={field.id}
-            className={className}
+            className={`form-select ${baseClassName}`}
             value={formData[field.id] || ''}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             required={field.required}
@@ -68,7 +68,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({ form, chatAnswers, onSubmit
         return (
           <textarea
             key={field.id}
-            className={className}
+            className={`form-control ${baseClassName}`}
             value={formData[field.id] || ''}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             placeholder={field.placeholder}
@@ -81,7 +81,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({ form, chatAnswers, onSubmit
           <input
             key={field.id}
             type={field.type}
-            className={className}
+            className={`form-control ${baseClassName}`}
             value={formData[field.id] || ''}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             placeholder={field.placeholder}
@@ -93,25 +93,37 @@ const FormRenderer: React.FC<FormRendererProps> = ({ form, chatAnswers, onSubmit
 
   return (
     <div className="form-container">
-      <h2>{form.name}</h2>
-      <p className="form-description">{form.description}</p>
+      <div className="form-header">
+        <h2>{form.name}</h2>
+        <p className="form-description">{form.description}</p>
+      </div>
+      
       {autoFilledFields.size > 0 && (
         <div className="autofill-notice">
-          ✨ Campos rellenados automáticamente desde el chat
+          <strong>Campos rellenados automáticamente desde el chat</strong>
         </div>
       )}
+      
       <form onSubmit={handleSubmit} className="municipal-form">
-        {form.fields.map(field => (
-          <div key={field.id} className="field-group">
-            <label htmlFor={field.id}>
-              {field.label} {field.required && <span className="required">*</span>}
-            </label>
-            {renderField(field)}
-          </div>
-        ))}
-        <button type="submit" className="submit-button">
-          Enviar Solicitud
-        </button>
+        <div className="row">
+          {form.fields.map(field => (
+            <div key={field.id} className="col-md-6 mb-3">
+              <div className="form-group">
+                <label htmlFor={field.id} className="form-label">
+                  {field.label} {field.required && <span className="required">*</span>}
+                </label>
+                {renderField(field)}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="d-grid">
+          <button type="submit" className="submit-button">
+            <i className="bi bi-check-lg me-2"></i>
+            Enviar Solicitud
+          </button>
+        </div>
       </form>
     </div>
   );
