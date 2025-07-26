@@ -217,12 +217,28 @@ function App() {
     }
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMessage: Message = { sender: "user", text: input };
     setMessages(prev => [...prev, userMessage]);
 
+    // Llamada a la API externa para obtener respuesta del backend
+    try {
+      const response = await fetch('http://localhost:8000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: input })
+      });
+      const data = await response.json();
+      if (data && data.response) {
+        setMessages(prev => [...prev, { sender: "bot", text: data.response }]);
+      }
+    } catch (err) {
+      setMessages(prev => [...prev, { sender: "bot", text: "[Error de conexión con el backend]" }]);
+    }
+
+    // ...lógica original...
     // Get current question info
     const currentQuestion = currentQuestions[currentStep];
     const questionInfo = additionalQuestions[selectedForm?.id || '']?.find(q => q.key === currentQuestion.key);
