@@ -6,7 +6,9 @@ import FormRenderer from './components/FormRenderer';
 import Login from './components/Login';
 import LoadingScreen from './components/LoadingScreen';
 import Navbar from './components/Navbar';
+import DocumentInfo from './components/DocumentInfo';
 import { useAuth } from './hooks/useAuth';
+import DocumentService, { type DocumentInfoResponse } from './services/documentService';
 
 // Extended questions including form selection
 const baseQuestions = [
@@ -52,7 +54,9 @@ function App() {
   const [input, setInput] = useState("");
   const [selectedForm, setSelectedForm] = useState<MunicipalForm | null>(null);
   const [currentQuestions, setCurrentQuestions] = useState(baseQuestions);
-  const [phase, setPhase] = useState<'chat' | 'form' | 'completed'>('chat');
+  const [phase, setPhase] = useState<'chat' | 'document-info' | 'form' | 'completed'>('chat');
+  const [documentInfo, setDocumentInfo] = useState<DocumentInfoResponse | null>(null);
+  const [loadingDocumentInfo, setLoadingDocumentInfo] = useState(false);
 
   // Inicializar el chat cuando el usuario se autentica
   React.useEffect(() => {
@@ -107,6 +111,42 @@ function App() {
     setSelectedForm(null);
     setCurrentQuestions(baseQuestions);
     setPhase('chat');
+    setDocumentInfo(null);
+  };
+
+  const handleDocumentInfoBack = () => {
+    setPhase('chat');
+    setDocumentInfo(null);
+  };
+
+  const handleDocumentInfoProceed = () => {
+    if (!selectedForm) return;
+    
+    // Get specific questions for this form
+    const formSpecificQuestions = additionalQuestions[selectedForm.id] || [];
+    const allQuestions = [...baseQuestions, ...formSpecificQuestions];
+    setCurrentQuestions(allQuestions);
+    
+    // Check if we need to collect more information or go directly to form
+    if (currentStep < allQuestions.length - 1) {
+      // Continue with chat to collect missing info
+      setPhase('chat');
+      const nextQuestion = allQuestions[currentStep + 1];
+      const botResponse: Message = {
+        sender: "bot",
+        text: `Necesito algunos datos más para completar tu solicitud. ${nextQuestion.question}`
+      };
+      setMessages(prev => [...prev, botResponse]);
+      setCurrentStep(currentStep + 1);
+    } else {
+      // Go directly to form
+      setPhase('form');
+      const botResponse: Message = {
+        sender: "bot",
+        text: "Perfecto, ahora vamos a completar el formulario con la información que me has proporcionado."
+      };
+      setMessages(prev => [...prev, botResponse]);
+    }
   };
 
   const handleSend = () => {
@@ -156,31 +196,40 @@ function App() {
     setInput("");
   };
 
-  const handleFormSelect = (form: MunicipalForm) => {
+  const handleFormSelect = async (form: MunicipalForm) => {
     setSelectedForm(form);
+    setLoadingDocumentInfo(true);
     
-    // Get specific questions for this form
-    const formSpecificQuestions = additionalQuestions[form.id] || [];
-    const allQuestions = [...baseQuestions, ...formSpecificQuestions];
-    setCurrentQuestions(allQuestions);
-    
-    // If we have incomplete information, continue chat
-    if (currentStep < allQuestions.length - 1) {
-      setCurrentStep(currentStep + 1);
-      const nextQuestion = allQuestions[currentStep + 1];
+    try {
+      // Llamar al backend para obtener información del documento
+      // Por ahora usamos datos mock, pero aquí harías: 
+      // const info = await DocumentService.getDocumentInfo(form.id);
+      const info = DocumentService.getMockDocumentInfo(form.id);
+      
+      setDocumentInfo(info);
+      setPhase('document-info');
+      
       const botResponse: Message = {
         sender: "bot",
-        text: `Perfecto, has seleccionado: ${form.name}. ${nextQuestion.question}`
+        text: `Perfecto, has seleccionado: ${form.name}. Te muestro la información detallada de este trámite.`
       };
       setMessages(prev => [...prev, botResponse]);
-    } else {
-      // We have all info, show form
+      
+    } catch (error) {
+      console.error('Error loading document info:', error);
+      // Fallback al comportamiento anterior
+      const formSpecificQuestions = additionalQuestions[form.id] || [];
+      const allQuestions = [...baseQuestions, ...formSpecificQuestions];
+      setCurrentQuestions(allQuestions);
+      
+      const botResponse: Message = {
+        sender: "bot",
+        text: `Perfecto, has seleccionado: ${form.name}. Continuemos con el formulario.`
+      };
+      setMessages(prev => [...prev, botResponse]);
       setPhase('form');
-      const botResponse: Message = {
-        sender: "bot",
-        text: `Perfecto, has seleccionado: ${form.name}. Ahora vamos a completar el formulario con la información que me has proporcionado.`
-      };
-      setMessages(prev => [...prev, botResponse]);
+    } finally {
+      setLoadingDocumentInfo(false);
     }
   };
 
@@ -196,7 +245,14 @@ function App() {
       <Navbar user={user!} onLogout={logout} />
       
       <div className="container-fluid h-100">
-        {phase === 'form' && selectedForm ? (
+        {phase === 'document-info' && documentInfo ? (
+          <DocumentInfo
+            data={documentInfo}
+            onProceed={handleDocumentInfoProceed}
+            onBack={handleDocumentInfoBack}
+            isLoading={loadingDocumentInfo}
+          />
+        ) : phase === 'form' && selectedForm ? (
           <FormRenderer
             form={selectedForm}
             chatAnswers={answers}
