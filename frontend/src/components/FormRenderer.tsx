@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { MunicipalForm, FormField } from '../types/forms';
+import PDFGenerator from './PDFGenerator';
+import type { FormData } from '../services/pdfService';
 
 interface FormRendererProps {
   form: MunicipalForm;
@@ -10,6 +12,7 @@ interface FormRendererProps {
 const FormRenderer: React.FC<FormRendererProps> = ({ form, chatAnswers, onSubmit }) => {
   const [formData, setFormData] = useState<{ [key: string]: string }>({});
   const [autoFilledFields, setAutoFilledFields] = useState<Set<string>>(new Set());
+  const [showPDFGenerator, setShowPDFGenerator] = useState(false);
 
   useEffect(() => {
     // Auto-fill form with chat answers
@@ -118,13 +121,35 @@ const FormRenderer: React.FC<FormRendererProps> = ({ form, chatAnswers, onSubmit
           ))}
         </div>
         
-        <div className="d-grid">
-          <button type="submit" className="submit-button">
-            <i className="bi bi-check-lg me-2"></i>
-            Enviar Solicitud
-          </button>
+        <div className="d-grid gap-2">
+          <div className="row">
+            <div className="col-md-6">
+              <button 
+                type="button" 
+                className="btn btn-outline-primary w-100"
+                onClick={() => setShowPDFGenerator(true)}
+              >
+                <i className="bi bi-file-earmark-pdf me-2"></i>
+                Generar PDF
+              </button>
+            </div>
+            <div className="col-md-6">
+              <button type="submit" className="submit-button w-100">
+                <i className="bi bi-check-lg me-2"></i>
+                Enviar Solicitud
+              </button>
+            </div>
+          </div>
         </div>
       </form>
+
+      {showPDFGenerator && (
+        <PDFGenerator
+          form={form}
+          formData={formData as FormData}
+          onClose={() => setShowPDFGenerator(false)}
+        />
+      )}
     </div>
   );
 };
