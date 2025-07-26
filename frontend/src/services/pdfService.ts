@@ -128,6 +128,7 @@ export class PDFService {
       },
       'empadronamiento': {
         'nombre': 'nombre_apellidos',
+        'email': 'correo_electronico',
         'dni': 'dni_nie',
         'fecha_nacimiento': 'fecha_nacimiento',
         'nacionalidad': 'nacionalidad',
@@ -137,6 +138,19 @@ export class PDFService {
     };
 
     return mappings[formId as keyof typeof mappings] || {};
+  }
+
+  /**
+   * Descarga el PDF original sin rellenar
+   */
+  static async downloadOriginalPDF(formId: string): Promise<Uint8Array> {
+    try {
+      const pdfBytes = await this.loadPDFTemplate(formId);
+      return new Uint8Array(pdfBytes);
+    } catch (error) {
+      console.error('Error cargando PDF original:', error);
+      throw new Error('No se pudo cargar el PDF original');
+    }
   }
 
   /**
@@ -160,35 +174,60 @@ export class PDFService {
    * Genera un PDF usando HTML como alternativa si los PDFs originales no tienen campos editables
    */
   static async generatePDFFromHTML(formId: string, formData: FormData): Promise<Uint8Array> {
+    console.log('=== Generando PDF ===');
+    console.log('Form ID:', formId);
+    console.log('Form Data:', formData);
+    
     const { jsPDF } = await import('jspdf');
     
     const doc = new jsPDF();
     const formName = this.getFormName(formId);
     
     // Título del documento
-    doc.setFontSize(16);
-    doc.text(formName, 20, 20);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text(formName, 20, 25);
     
     // Fecha actual
     doc.setFontSize(10);
-    doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, 20, 30);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Fecha de solicitud: ${new Date().toLocaleDateString('es-ES')}`, 20, 35);
+    
+    // Línea separadora
+    doc.line(20, 40, 190, 40);
     
     // Datos del formulario
     doc.setFontSize(12);
-    let yPosition = 50;
+    doc.setFont('helvetica', 'normal');
+    let yPosition = 55;
     
+    console.log('Procesando campos...');
     Object.entries(formData).forEach(([key, value]) => {
-      const label = this.getFieldLabel(formId, key);
-      doc.text(`${label}: ${value}`, 20, yPosition);
-      yPosition += 10;
-      
-      // Nueva página si es necesario
-      if (yPosition > 270) {
-        doc.addPage();
-        yPosition = 20;
+      if (value && value.toString().trim() !== '') {
+        const label = this.getFieldLabel(formId, key);
+        console.log(`Campo: ${key} -> ${label}: ${value}`);
+        
+        // Etiqueta en negrita
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${label}:`, 20, yPosition);
+        
+        // Valor en normal
+        doc.setFont('helvetica', 'normal');
+        const valueText = value.toString();
+        const splitText = doc.splitTextToSize(valueText, 150);
+        doc.text(splitText, 20, yPosition + 6);
+        
+        yPosition += 6 + (splitText.length * 6) + 4; // Espaciado dinámico
+        
+        // Nueva página si es necesario
+        if (yPosition > 270) {
+          doc.addPage();
+          yPosition = 20;
+        }
       }
     });
     
+    console.log('PDF generado correctamente');
     return new Uint8Array(doc.output('arraybuffer'));
   }
 
@@ -220,6 +259,7 @@ export class PDFService {
       },
       'empadronamiento': {
         'nombre': 'Nombre y apellidos',
+        'email': 'Correo electrónico',
         'dni': 'DNI/NIE',
         'fecha_nacimiento': 'Fecha de nacimiento',
         'nacionalidad': 'Nacionalidad',

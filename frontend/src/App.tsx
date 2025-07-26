@@ -55,7 +55,7 @@ function App() {
   const [input, setInput] = useState("");
   const [selectedForm, setSelectedForm] = useState<MunicipalForm | null>(null);
   const [currentQuestions, setCurrentQuestions] = useState(baseQuestions);
-  const [phase, setPhase] = useState<'chat' | 'document-info' | 'form' | 'completed'>('chat');
+  const [phase, setPhase] = useState<'chat' | 'document-info' | 'form' | 'completed' | 'await-continue'>('chat');
   const [documentInfo, setDocumentInfo] = useState<DocumentInfoResponse | null>(null);
   const [loadingDocumentInfo, setLoadingDocumentInfo] = useState(false);
   
@@ -104,6 +104,8 @@ function App() {
   // Resto de la lógica del chat (funciones existentes)
   const handleFormSubmit = (formData: { [key: string]: string }) => {
     console.log('Form submitted:', formData);
+    // Guardar los datos del formulario para el PDF
+    setAnswers(prev => ({ ...prev, ...formData }));
     setPhase('completed');
     setMessages(prev => [
       ...prev,
@@ -112,6 +114,41 @@ function App() {
         text: "¡Perfecto! Tu formulario ha sido completado. Puedes descargarlo desde arriba." 
       }
     ]);
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!selectedForm) return;
+    
+    try {
+      // Importar dinámicamente el servicio PDF
+      const { PDFService } = await import('./services/pdfService');
+      
+      // Intentar usar el PDF original primero
+      let pdfBytes: Uint8Array;
+      try {
+        pdfBytes = await PDFService.generateFilledPDF(selectedForm.id, answers);
+      } catch (error) {
+        console.warn('No se pudo rellenar el PDF original, descargando PDF en blanco:', error);
+        // Si no se puede rellenar, descargar el PDF original en blanco
+        pdfBytes = await PDFService.downloadOriginalPDF(selectedForm.id);
+      }
+      
+      // Descargar el PDF
+      const fileName = `${selectedForm.name}_${new Date().toISOString().split('T')[0]}.pdf`;
+      PDFService.downloadPDF(pdfBytes, fileName);
+    } catch (error) {
+      console.error('Error con PDF original, generando desde datos:', error);
+      try {
+        // Como último recurso, generar PDF con los datos
+        const { PDFService } = await import('./services/pdfService');
+        const pdfBytes = await PDFService.generatePDFFromHTML(selectedForm.id, answers);
+        const fileName = `${selectedForm.name}_${new Date().toISOString().split('T')[0]}.pdf`;
+        PDFService.downloadPDF(pdfBytes, fileName);
+      } catch (finalError) {
+        console.error('Error generando PDF:', finalError);
+        alert('Error al generar el PDF. Por favor, inténtalo de nuevo.');
+      }
+    }
   };
 
   const resetChat = () => {
@@ -261,18 +298,52 @@ function App() {
       };
       setMessages(prev => [...prev, botResponse]);
     } else {
-      // Chat phase completed - bloquear chat
+      // Chat phase completed - mostrar botón continuar
       const botResponse: Message = {
         sender: "bot",
-        text: "¡Perfecto! He recopilado toda tu información. Ahora selecciona el botón para continuar."
+        text: "¡Perfecto! He recopilado toda tu información. Haz click en continuar."
       };
       setMessages(prev => [...prev, botResponse]);
-      
-      // Cambiar a fase de selección de formulario y bloquear input
-      setPhase('document-info');
+      setPhase('await-continue');
     }
 
     setInput("");
+  };
+
+  const handleSkip = () => {
+    if (!selectedForm) return;
+    
+    const currentQuestion = currentQuestions[currentStep];
+    const questionInfo = additionalQuestions[selectedForm.id]?.find(q => q.key === currentQuestion.key);
+    
+    // Solo permitir saltar si el campo es opcional
+    if (questionInfo?.required !== false) return;
+    
+    // Añadir mensaje del usuario indicando que saltó
+    const userMessage: Message = { sender: "user", text: "(Campo saltado)" };
+    setMessages(prev => [...prev, userMessage]);
+    
+    // Incrementar el paso ANTES de verificar
+    const nextStep = currentStep + 1;
+    setCurrentStep(nextStep);
+    
+    // Move to next question or finish
+    if (nextStep < currentQuestions.length) {
+      const nextQuestion = currentQuestions[nextStep];
+      const botResponse: Message = { 
+        sender: "bot", 
+        text: nextQuestion.question 
+      };
+      setMessages(prev => [...prev, botResponse]);
+    } else {
+      // Chat phase completed - mostrar botón continuar
+      const botResponse: Message = {
+        sender: "bot",
+        text: "¡Perfecto! He recopilado toda tu información. Haz click en continuar."
+      };
+      setMessages(prev => [...prev, botResponse]);
+      setPhase('await-continue');
+    }
   };
 
   const handleFormSelect = async (form: MunicipalForm) => {
@@ -425,11 +496,21 @@ function App() {
                   <div ref={chatEndRef} />
                 </div>
 
-                {/* Mensaje informativo cuando el chat está bloqueado para selección */}
-                {phase === 'document-info' && !selectedForm && (
-                  <div className="alert alert-info mt-3">
-                    <i className="bi bi-info-circle me-2"></i>
-                    Chat bloqueado. Selecciona un formulario usando los botones para continuar.
+
+                {/* Botón continuar tras recopilar datos */}
+                {phase === 'await-continue' && selectedForm && (
+                  <div className="text-center mt-4">
+                    <div className="alert alert-info mb-3">
+                      <i className="bi bi-info-circle me-2"></i>
+                      ¡Perfecto! He recopilado toda tu información. Haz click en continuar.
+                    </div>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => setPhase('form')}
+                    >
+                      <i className="bi bi-arrow-right-circle me-2"></i>
+                      Continuar
+                    </button>
                   </div>
                 )}
 
@@ -453,6 +534,23 @@ function App() {
                         <i className="bi bi-send"></i>
                       </button>
                     </div>
+                    
+                    {/* Botón Saltar para campos opcionales */}
+                    {currentStep < currentQuestions.length && selectedForm && (() => {
+                      const currentQuestion = currentQuestions[currentStep];
+                      const questionInfo = additionalQuestions[selectedForm.id]?.find(q => q.key === currentQuestion.key);
+                      return questionInfo?.required === false;
+                    })() && (
+                      <div className="text-center mt-2">
+                        <button
+                          onClick={handleSkip}
+                          className="btn btn-outline-secondary btn-sm"
+                        >
+                          <i className="bi bi-arrow-right me-1"></i>
+                          Saltar (opcional)
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -475,11 +573,11 @@ function App() {
                         Continuar con otro trámite
                       </button>
                       <button
-                        onClick={() => window.print()}
+                        onClick={handleDownloadPDF}
                         className="btn btn-outline-secondary"
                       >
-                        <i className="bi bi-printer me-2"></i>
-                        Imprimir formulario
+                        <i className="bi bi-download me-2"></i>
+                        Descargar formulario PDF
                       </button>
                     </div>
                   </div>

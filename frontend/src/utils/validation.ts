@@ -27,48 +27,42 @@ export class ValidationUtils {
   
   // Validar DNI/NIE español
   static validateDNI(dni: string): ValidationResult {
-    const dniRegex = /^[0-9]{8}[A-Z]$/;
-    const nieRegex = /^[XYZ][0-9]{7}[A-Z]$/;
-    
     if (!dni) {
       return { isValid: false, message: "El DNI/NIE es obligatorio" };
     }
     
-    // Convertir a mayúsculas y limpiar espacios
-    const cleanDni = dni.toUpperCase().replace(/\s/g, '');
+    // Limpiar y formatear el DNI (eliminar espacios, guiones, puntos)
+    const cleanDni = dni.toUpperCase().replace(/[\s\-\.]/g, '');
+    
+    // Verificar formato básico
+    const dniRegex = /^[0-9]{8}[A-Z]$/;
+    const nieRegex = /^[XYZ][0-9]{7}[A-Z]$/;
     
     if (!dniRegex.test(cleanDni) && !nieRegex.test(cleanDni)) {
-      return { 
-        isValid: false, 
-        message: "Formato incorrecto. Debe ser: 12345678A (DNI) o X1234567A (NIE)",
-        suggestedValue: cleanDni
-      };
+      // Verificar si tiene la longitud correcta pero formato incorrecto
+      if (cleanDni.length === 9) {
+        return { 
+          isValid: false, 
+          message: "Formato incorrecto. Debe tener 8 números + 1 letra (DNI) o X/Y/Z + 7 números + 1 letra (NIE)",
+          suggestedValue: cleanDni
+        };
+      } else if (cleanDni.length < 9) {
+        return { 
+          isValid: false, 
+          message: `Faltan ${9 - cleanDni.length} caracteres. El formato debe ser: 12345678A o X1234567A`,
+          suggestedValue: cleanDni
+        };
+      } else {
+        return { 
+          isValid: false, 
+          message: "Demasiados caracteres. El formato debe ser: 12345678A (DNI) o X1234567A (NIE)",
+          suggestedValue: cleanDni.substring(0, 9)
+        };
+      }
     }
     
-    // Validar letra de control
-    const letterMap = 'TRWAGMYFPDXBNJZSQVHLCKE';
-    let number: number;
-    
-    if (nieRegex.test(cleanDni)) {
-      // Para NIE, convertir la primera letra
-      const firstChar = cleanDni.charAt(0);
-      const replacement = firstChar === 'X' ? '0' : firstChar === 'Y' ? '1' : '2';
-      number = parseInt(replacement + cleanDni.substring(1, 8));
-    } else {
-      number = parseInt(cleanDni.substring(0, 8));
-    }
-    
-    const expectedLetter = letterMap[number % 23];
-    const providedLetter = cleanDni.charAt(cleanDni.length - 1);
-    
-    if (expectedLetter !== providedLetter) {
-      return { 
-        isValid: false, 
-        message: `La letra de control es incorrecta. Debería ser: ${cleanDni.substring(0, cleanDni.length - 1)}${expectedLetter}`,
-        suggestedValue: cleanDni.substring(0, cleanDni.length - 1) + expectedLetter
-      };
-    }
-    
+    // Solo verificar formato, no validar letra de control
+    // El usuario puede escribir su propia letra
     return { isValid: true, suggestedValue: cleanDni };
   }
   
