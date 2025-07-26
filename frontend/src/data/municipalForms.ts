@@ -48,6 +48,7 @@ export const municipalForms: MunicipalForm[] = [
     description: 'Formulario para solicitar empadronamiento',
     fields: [
       { id: 'nombre', label: 'Nombre y apellidos', type: 'text', required: true },
+      { id: 'email', label: 'Correo electrónico', type: 'email', required: true },
       { id: 'dni', label: 'DNI/NIE', type: 'text', required: true },
       { id: 'fecha_nacimiento', label: 'Fecha de nacimiento', type: 'text', required: true },
       { id: 'nacionalidad', label: 'Nacionalidad', type: 'text', required: true },
@@ -56,6 +57,7 @@ export const municipalForms: MunicipalForm[] = [
     ],
     chatMapping: {
       'name': 'nombre',
+      'email': 'email',
       'dni': 'dni',
       'birthDate': 'fecha_nacimiento',
       'country': 'nacionalidad',

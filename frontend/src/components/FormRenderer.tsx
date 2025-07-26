@@ -19,13 +19,16 @@ const FormRenderer: React.FC<FormRendererProps> = ({ form, chatAnswers, onSubmit
     const newFormData: { [key: string]: string } = {};
     const autoFilled = new Set<string>();
 
-    Object.entries(form.chatMapping).forEach(([chatKey, fieldId]) => {
-      if (chatAnswers[chatKey]) {
-        newFormData[fieldId] = chatAnswers[chatKey];
-        autoFilled.add(fieldId);
-      }
-    });
-
+    // Apply chat mappings
+    if (form.chatMapping && chatAnswers) {
+      Object.entries(form.chatMapping).forEach(([chatKey, fieldId]) => {
+        if (chatAnswers[chatKey] !== undefined && chatAnswers[chatKey] !== '') {
+          newFormData[fieldId] = chatAnswers[chatKey];
+          autoFilled.add(fieldId);
+        }
+      });
+    }
+    
     setFormData(newFormData);
     setAutoFilledFields(autoFilled);
   }, [form, chatAnswers]);

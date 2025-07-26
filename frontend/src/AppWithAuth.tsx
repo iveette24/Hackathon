@@ -148,7 +148,7 @@ function App() {
       // Chat phase completed
       const botResponse: Message = {
         sender: "bot",
-        text: "¡Perfecto! He recopilado toda tu información. Ahora selecciona un formulario de los que te mostré anteriormente para continuar."
+        text: "¡Perfecto! He recopilado toda tu información. Ahora selecciona el botón para continuar."
       };
       setMessages(prev => [...prev, botResponse]);
     }

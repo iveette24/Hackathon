@@ -7,11 +7,22 @@
   --very-light-gray: #BDBDBD;
 }
 
+/* App container responsivo */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+
+/* Responsive padding para diferentes pantallas */
+@media (min-width: 768px) {
+  #root {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+  }
 }
 
 .logo {
@@ -470,6 +481,35 @@
 .btn-outline-info:hover {
   background-color: var(--primary-red);
   border-color: var(--primary-red);
+}
+
+/* Estilos para la fase de completado */
+.alert-info {
+  background-color: #e3f2fd;
+  border-color: #1976d2;
+  color: #0d47a1;
+}
+
+.d-flex.gap-3 {
+  gap: 1rem !important;
+}
+
+/* Responsive para botones en móvil */
+@media (max-width: 767px) {
+  .d-flex.gap-3 {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .d-flex.gap-3 .btn {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+/* Mejoras en el auto-scroll */
+.chat-messages {
+  scroll-behavior: smooth;
 }
 
 /* Spinner de carga */
